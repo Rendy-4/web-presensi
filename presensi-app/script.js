@@ -13,7 +13,7 @@
 // ------------------------------------------------------------------
 // 1. KONFIGURASI GLOBAL
 // ------------------------------------------------------------------
-const API_ENDPOINT = "https://silver-zoos-tap.loca.lt"; // ganti sesuai backend asli
+const API_ENDPOINT = "web-presensi-production.up.railway.app"; // ganti sesuai backend asli
 
 // Menyimpan "state" aplikasi supaya mudah dilacak di satu tempat
 const state = {
