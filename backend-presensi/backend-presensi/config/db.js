@@ -12,15 +12,15 @@ const mysql = require("mysql2");
 // Sesuaikan nilai-nilai ini jika konfigurasi MySQL di Laragon Anda berbeda
 // (misalnya jika Anda mengganti port MySQL bawaan Laragon).
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "db_presensi",
-  port: process.env.DB_PORT || 3306,
+  host: "localhost",
+  user: "root",
+  password: "",           // default Laragon: password root kosong
+  database: "db_presensi",
+  port: 3306,              // port default MySQL di Laragon
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  dateStrings: true,
+  dateStrings: true,       // agar kolom DATETIME dikembalikan sebagai string, bukan objek Date UTC
 });
 
 // Gunakan versi Promise dari pool agar bisa memakai async/await
@@ -32,10 +32,11 @@ const db = pool.promise();
 (async () => {
   try {
     const connection = await db.getConnection();
-    console.log("✅ Berhasil terhubung ke database MySQL");
+    console.log("✅ Berhasil terhubung ke database MySQL (db_presensi)");
     connection.release();
   } catch (err) {
     console.error("❌ Gagal terhubung ke database MySQL:", err.message);
+    console.error("   Pastikan service MySQL di Laragon sudah menyala dan database 'db_presensi' sudah dibuat (lihat schema.sql).");
   }
 })();
 

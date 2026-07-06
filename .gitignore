@@ -2,3 +2,4 @@ node_modules/
 presensi-BE/node_modules/
 ssl/
 .env
+uploads/

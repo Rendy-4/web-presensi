@@ -13,7 +13,7 @@
 // ------------------------------------------------------------------
 // 1. KONFIGURASI GLOBAL
 // ------------------------------------------------------------------
-const API_ENDPOINT = "https://real-trees-exist.loca.lt"; // ganti sesuai backend asli
+const API_ENDPOINT = "https://silver-zoos-tap.loca.lt"; // ganti sesuai backend asli
 
 // Menyimpan "state" aplikasi supaya mudah dilacak di satu tempat
 const state = {
@@ -383,7 +383,7 @@ async function sendPresensiToServer({ latitude, longitude, alamatLengkap, photoB
     // PENTING: saat mengirim FormData dengan fetch, JANGAN set header
     // 'Content-Type' secara manual. Browser akan otomatis menentukan
     // header Content-Type: multipart/form-data beserta "boundary"-nya.
-    response = await fetch(API_ENDPOINT, {
+    response = await fetch(`${API_ENDPOINT}/api/presensi`, {
       method: "POST",
       body: formData,
     });

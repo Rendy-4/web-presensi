@@ -4,11 +4,12 @@
    BACKEND PRESENSI GEOLOKASI & KAMERA
    Stack: Node.js + Express.js + MySQL (mysql2) + Multer + CORS
 
-   CATATAN DEPLOY:
-   Di lingkungan cloud (Railway/Render/dll), HTTPS sudah otomatis
-   disediakan oleh platform di depan aplikasi kita. Jadi server ini
-   cukup jalan HTTP biasa di dalam (tidak perlu sertifikat self-signed
-   lagi seperti saat development lokal).
+   Cara menjalankan (lihat juga README.md):
+     1. Pastikan Laragon (Apache/MySQL) sudah START.
+     2. Import schema.sql ke MySQL (bikin database db_presensi).
+     3. npm install
+     4. npm start   (atau: node server.js)
+     5. Server berjalan di http://localhost:5000
    ================================================================== */
 
 const express = require("express");
@@ -22,16 +23,14 @@ require("./config/db");
 const presensiRoutes = require("./routes/presensiRoutes");
 
 const app = express();
-
-// Railway/Render/Heroku dll menyediakan PORT lewat environment variable.
-// Saat development lokal (tidak ada env PORT), fallback ke 5000.
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 
 // ------------------------------------------------------------------
 // MIDDLEWARE GLOBAL
 // ------------------------------------------------------------------
 
-// Mengizinkan request lintas origin (Frontend di domain/port berbeda)
+// Mengizinkan request lintas origin (misal Frontend di file:// atau
+// port berbeda seperti 5500/3000) supaya tidak diblokir CORS browser.
 app.use(cors());
 
 // Parsing body request berformat JSON (untuk endpoint selain upload file)
@@ -40,7 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Menjadikan folder /uploads sebagai STATIC FOLDER, sehingga foto bisa
 // diakses langsung lewat browser, contoh:
-//   https://nama-domain-anda/uploads/absen_1_1719702400000.jpg
+//   http://localhost:5000/uploads/absen_1_1719702400000.jpg
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ------------------------------------------------------------------
@@ -86,5 +85,5 @@ app.use((req, res) => {
 // JALANKAN SERVER
 // ------------------------------------------------------------------
 app.listen(PORT, () => {
-  console.log(`🚀 Server berjalan di port ${PORT}`);
+  console.log(`✅ Server berjalan di http://localhost:${PORT}`);
 });
