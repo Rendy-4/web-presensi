@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presensi Geolokasi &amp; Kamera</title>
+
+<!-- Leaflet.js (library peta gratis & open source) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<!-- Font: Space Grotesk untuk judul, Inter untuk teks -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!--
+    CATATAN KEAMANAN PENTING:
+    Browser HANYA mengizinkan akses Kamera (getUserMedia) dan Lokasi (Geolocation)
+    pada koneksi yang aman, yaitu:
+      1. https://   (di server produksi / saat sudah online)
+      2. http://localhost atau http://127.0.0.1 (saat development di komputer sendiri)
+    Jika file ini dibuka langsung lewat file:// atau lewat http:// biasa di jaringan/HP,
+    maka permintaan izin kamera & GPS akan otomatis DITOLAK oleh browser.
+  -->
+
+  <div class="page">
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+      <span class="eyebrow">Sistem Presensi Digital</span>
+      <h1 class="app-title">Absen<span class="dot">.</span></h1>
+      <p class="app-subtitle">Verifikasi kehadiran dengan foto langsung &amp; titik lokasi asli.</p>
+    </header>
+
+    <!-- ===== STEPPER: menunjukkan alur kerja 4 langkah ===== -->
+    <ol class="stepper" id="stepper">
+      <li class="step is-active" data-step="1">
+        <span class="step-index">1</span><span class="step-label">Izin Akses</span>
+      </li>
+      <li class="step" data-step="2">
+        <span class="step-index">2</span><span class="step-label">Kamera Siap</span>
+      </li>
+      <li class="step" data-step="3">
+        <span class="step-index">3</span><span class="step-label">Lokasi Ditemukan</span>
+      </li>
+      <li class="step" data-step="4">
+        <span class="step-index">4</span><span class="step-label">Terkirim</span>
+      </li>
+    </ol>
+
+    <!-- ===== KARTU UTAMA ===== -->
+    <main class="card">
+
+      <!-- Panel Kamera -->
+      <section class="panel camera-panel">
+        <div class="panel-label">Pratinjau Kamera</div>
+
+        <div class="media-box" id="cameraBox">
+          <!-- Placeholder ditampilkan SEBELUM kamera aktif, supaya layout tidak "loncat" -->
+          <div class="placeholder" id="cameraPlaceholder">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M4 8a2 2 0 0 1 2-2h1.2a1 1 0 0 0 .8-.4l.8-1.2a1 1 0 0 1 .8-.4h4.8a1 1 0 0 1 .8.4l.8 1.2a1 1 0 0 0 .8.4H18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/>
+              <circle cx="12" cy="13" r="3.2"/>
+            </svg>
+            <p>Kamera belum aktif</p>
+          </div>
+
+          <!-- Elemen video: menampilkan live stream dari kamera pengguna -->
+          <video id="cameraVideo" autoplay playsinline muted class="hidden"></video>
+
+          <!-- Badge status kamera -->
+          <span class="live-badge hidden" id="liveBadge">● LIVE</span>
+        </div>
+
+        <!-- Canvas TIDAK ditampilkan ke user, hanya dipakai "diam-diam" di JS
+             sebagai kanvas sementara untuk menangkap 1 frame video menjadi gambar -->
+        <canvas id="snapshotCanvas" class="hidden"></canvas>
+      </section>
+
+      <!-- Panel Peta & Koordinat -->
+      <section class="panel map-panel">
+        <div class="panel-label">Titik Lokasi</div>
+
+        <div class="media-box" id="mapBox">
+          <div class="placeholder" id="mapPlaceholder">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/>
+              <circle cx="12" cy="9.5" r="2.4"/>
+            </svg>
+            <p>Lokasi belum terdeteksi</p>
+          </div>
+          <!-- Peta Leaflet dirender di dalam div ini oleh script.js -->
+          <div id="leafletMap" class="hidden"></div>
+        </div>
+
+        <div class="coords-readout" id="coordsReadout">
+          <div class="coord-item">
+            <span class="coord-key">Latitude</span>
+            <span class="coord-val" id="latVal">—</span>
+          </div>
+          <div class="coord-item">
+            <span class="coord-key">Longitude</span>
+            <span class="coord-val" id="lngVal">—</span>
+          </div>
+          <div class="coord-item">
+            <span class="coord-key">Akurasi</span>
+            <span class="coord-val" id="accVal">—</span>
+          </div>
+        </div>
+
+        <!-- Alamat lengkap hasil Reverse Geocoding (Nominatim OpenStreetMap) -->
+        <div class="address-box" id="addressBox">
+          <span class="address-key">Alamat Lengkap</span>
+          <p class="address-val" id="addressVal">—</p>
+        </div>
+
+        <!-- Waktu presensi lengkap: Hari, Tanggal, Jam, GMT -->
+        <div class="timestamp-box" id="timestampBox">
+          <span class="timestamp-key">Waktu Presensi</span>
+          <p class="timestamp-val" id="timestampVal">—</p>
+        </div>
+      </section>
+
+      <!-- Panel Aksi & Status -->
+      <section class="panel action-panel">
+
+        <!-- Pesan error / info ditampilkan di sini secara dinamis -->
+        <div class="alert hidden" id="alertBox" role="alert"></div>
+
+        <!-- Stempel sukses: muncul setelah data berhasil terkirim ke server -->
+        <div class="stamp hidden" id="successStamp">
+          <div class="stamp-ring">
+            <span class="stamp-check">✓</span>
+          </div>
+          <p class="stamp-text">Presensi Tercatat</p>
+          <p class="stamp-time" id="stampTime"></p>
+        </div>
+
+        <button class="btn btn-primary" id="mainBtn">
+          <span class="btn-spinner hidden" id="btnSpinner"></span>
+          <span id="btnLabel">Lakukan Presensi</span>
+        </button>
+
+        <button class="btn btn-ghost hidden" id="resetBtn">Ulangi Presensi</button>
+
+        <p class="hint">
+          Pastikan Anda mengizinkan akses <strong>Kamera</strong> dan <strong>Lokasi</strong> saat diminta oleh browser.
+        </p>
+      </section>
+
+    </main>
+
+    <footer class="app-footer">
+      Endpoint API: <code>POST https://real-trees-exist.loca.lt/api/presensi</code>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,434 @@
+/* ============================================================
+   TOKEN DESAIN
+   Tema: "kartu absen digital" — navy gelap + tinta amber (warna
+   stempel) + readout koordinat bergaya jam LCD (monospace).
+   ============================================================ */
+:root {
+  --ink: #0F1A2B;         /* latar belakang utama */
+  --panel: #16233A;       /* permukaan kartu */
+  --panel-alt: #1C2C48;   /* kotak kamera / peta / input */
+  --border: rgba(234, 240, 250, 0.09);
+  --border-strong: rgba(234, 240, 250, 0.18);
+  --text: #EAF0FA;
+  --muted: #8496B3;
+  --amber: #E8A33D;
+  --amber-soft: rgba(232, 163, 61, 0.15);
+  --amber-dark: #C4831E;
+  --green: #3FB873;
+  --green-soft: rgba(63, 184, 115, 0.14);
+  --red: #E5584B;
+  --red-soft: rgba(229, 88, 75, 0.14);
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 9px;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* latar belakang bertekstur halus agar tidak flat */
+body {
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(232, 163, 61, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 100%, rgba(63, 184, 115, 0.06), transparent 45%);
+  min-height: 100vh;
+}
+
+.hidden { display: none !important; }
+
+/* ============================================================
+   LAYOUT — halaman selalu berpusat di tengah
+   ============================================================ */
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px 32px;
+}
+
+.app-header {
+  text-align: center;
+  max-width: 420px;
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.app-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 40px;
+  margin: 6px 0 8px;
+  letter-spacing: -0.02em;
+}
+.app-title .dot { color: var(--amber); }
+
+.app-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   STEPPER — 4 stasiun proses, seperti kartu punch-clock
+   ============================================================ */
+.stepper {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  justify-content: center;
+  padding: 8px 4px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--muted);
+  transition: all 0.25s ease;
+}
+
+.step-index {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.step-label { display: none; }
+@media (min-width: 480px) { .step-label { display: inline; } }
+
+.step.is-active {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+.step.is-active .step-index {
+  border-color: var(--amber);
+  background: var(--amber);
+  color: var(--ink);
+}
+
+.step.is-done {
+  color: var(--green);
+}
+.step.is-done .step-index {
+  border-color: var(--green);
+  background: var(--green);
+  color: var(--ink);
+}
+
+/* ============================================================
+   KARTU UTAMA
+   ============================================================ */
+.card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 30px 60px -25px rgba(0,0,0,0.55);
+}
+
+.panel-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 9px;
+}
+
+/* Kotak media (kamera / peta): rasio tetap supaya layout TIDAK
+   berubah/berantakan sebelum & sesudah izin diberikan */
+.media-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+.placeholder svg { opacity: 0.6; }
+.placeholder p { margin: 0; font-size: 13px; }
+
+#cameraVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* efek cermin, lebih natural untuk kamera depan */
+}
+
+.live-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.55);
+  color: #FF6B5E;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  padding: 4px 9px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+
+#leafletMap {
+  width: 100%;
+  height: 100%;
+}
+
+/* Readout koordinat gaya LCD */
+.coords-readout {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.coord-item {
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 6px;
+  text-align: center;
+}
+.coord-key {
+  display: block;
+  font-size: 9.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+}
+.coord-val {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--amber);
+  word-break: break-all;
+}
+
+/* Kotak Alamat Lengkap (hasil Reverse Geocoding) & Waktu Presensi */
+.address-box,
+.timestamp-box {
+  margin-top: 10px;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.address-key,
+.timestamp-key {
+  display: block;
+  font-size: 9.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.address-val {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.timestamp-val {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--amber);
+}
+
+/* ============================================================
+   PANEL AKSI
+   ============================================================ */
+.action-panel { display: flex; flex-direction: column; gap: 12px; }
+
+.btn {
+  width: 100%;
+  padding: 15px 18px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: var(--amber);
+  color: #221607;
+}
+.btn-primary:hover { background: var(--amber-dark); }
+.btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+}
+.btn-ghost:hover { border-color: var(--amber); color: var(--amber); }
+
+.btn-spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.25);
+  border-top-color: #221607;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Alert pesan (error / info) */
+.alert {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--red-soft);
+  color: #FFB4AC;
+  border: 1px solid rgba(229, 88, 75, 0.3);
+}
+.alert.alert-info {
+  background: var(--amber-soft);
+  color: var(--amber);
+  border-color: rgba(232, 163, 61, 0.3);
+}
+
+/* Stempel sukses — elemen "signature" halaman ini */
+.stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 0 4px;
+}
+.stamp-ring {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 3px solid var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  font-size: 26px;
+  animation: stampIn 0.4s cubic-bezier(.3,1.5,.4,1);
+}
+@keyframes stampIn {
+  0% { transform: scale(1.6) rotate(-14deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.stamp-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  margin: 4px 0 0;
+  color: var(--green);
+}
+.stamp-time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.app-footer {
+  margin-top: 22px;
+  font-size: 11.5px;
+  color: var(--muted);
+  text-align: center;
+}
+.app-footer code {
+  font-family: var(--font-mono);
+  background: var(--panel);
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+}
+
+/* ============================================================
+   RESPONSIF — di layar lebih lebar, kamera & peta berdampingan
+   ============================================================ */
+@media (min-width: 720px) {
+  .card {
+    max-width: 760px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "camera map"
+      "action action";
+    gap: 20px 18px;
+  }
+  .camera-panel { grid-area: camera; }
+  .map-panel { grid-area: map; }
+  .action-panel { grid-area: action; }
+}
